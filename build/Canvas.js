@@ -12,10 +12,12 @@ class Canvas {
 	}
 
 	clear(x, y, width, height){
-		x = x || 0;
-		y = y || 0;
-		width = width || this.dom.width;
-		height = height || this.dom.height;
+		x = x.constructor === Number ? x : 0;
+		y = y.constructor === Number ? y : 0;
+		width = width.constructor === Number ?
+			width : this.dom.width;
+		height = height.constructor === Number ?
+			height : this.dom.height;
 		this.context.clearRect(x, y, width, height);
 	}
 }
