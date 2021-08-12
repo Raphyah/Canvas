@@ -25,7 +25,12 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _CanvasObject_x, _CanvasObject_y;
+// Get every ancestor of the current prototype.
 Object.defineProperty(Object.prototype, "ancestors", {
+    /**
+     *
+     * @returns An array with every descendant of this object.
+     */
     get: function () {
         var arr = [];
         var p = this.constructor.prototype;
@@ -38,9 +43,15 @@ Object.defineProperty(Object.prototype, "ancestors", {
         return arr;
     }
 });
+// Check if the current object is any of value.
 Object.defineProperty(Object.prototype, "is_a", {
-    value: function (obj) {
-        return this.ancestors.includes(obj);
+    /**
+     *
+     * @param {*} object Check if this is equal to object.
+     * @returns a boolean indicating if is descendant of.
+     */
+    value: function (object) {
+        return this.ancestors.includes(object);
     }
 });
 // The Canvas constructor
@@ -48,7 +59,7 @@ var Canvas = /** @class */ (function () {
     // Initialize object
     /**
      *
-     * @param {String} ctx Sets the context type.
+     * @param {String} ctx Sets the context type. (default: 2d)
      */
     function Canvas(ctx) {
         if (ctx === void 0) { ctx = "2d"; }
@@ -69,10 +80,10 @@ var Canvas = /** @class */ (function () {
     // Clears the canvas object
     /**
      *
-     * @param {Number} x Sets the initial cleaning position x. (default: 0)
-     * @param {Number} y Sets the initial cleaning position y. (default: 0)
-     * @param {Number} width Sets the cleaning area witdh. (default: this.canvas.width)
-     * @param {Number} height Sets the cleaning area height. (default: this.canvas.height)
+     * @param {Number} x Sets the initial cleaning position x. Set to 0 if NaN. (default: 0)
+     * @param {Number} y Sets the initial cleaning position y. Set to 0 if NaN. (default: 0)
+     * @param {Number} width Sets the cleaning area witdh. Set to this.canvas.width if NaN.
+     * @param {Number} height Sets the cleaning area height. Set to this.canvas.height if NaN.
      */
     Canvas.prototype.clear = function (x, y, width, height) {
         if (x === void 0) { x = false; }
@@ -90,7 +101,7 @@ var Canvas = /** @class */ (function () {
     // Add a new object
     /**
      *
-     * @param {CanvasObject} object
+     * @param {CanvasObject} object Append a new object to this one.
      */
     Canvas.prototype.add = function (object) {
         if (!object.is_a(CanvasObject))
@@ -100,6 +111,9 @@ var Canvas = /** @class */ (function () {
         console.log(this.objects);
     };
     // Render every object added to canvas
+    /**
+     * Render every object appended to this one.
+     */
     Canvas.prototype.render = function () {
         for (var x in this.objects) {
             if (this.objects[x].is_a(CanvasObject)) {
@@ -109,10 +123,18 @@ var Canvas = /** @class */ (function () {
     };
     Object.defineProperty(Canvas.prototype, "width", {
         // Getter for canvas width
+        /**
+         *
+         * @returns Get the current width of the canvas element.
+         */
         get: function () {
             return this.dom.width;
         },
         // Setter for canvas width
+        /**
+         *
+         * @param {Number} value Set a new width for canvas element.
+         */
         set: function (value) {
             if (value.constructor === Number)
                 this.dom.width = value;
@@ -123,11 +145,17 @@ var Canvas = /** @class */ (function () {
         configurable: true
     });
     Object.defineProperty(Canvas.prototype, "height", {
-        // Getter for canvas height
+        /**
+         *
+         * @returns {Number} Get the current height of the canvas element.
+         */
         get: function () {
             return this.dom.height;
         },
-        // Setter for canvas height
+        /**
+         *
+         * @param {Number} value Set a new height for canvas element.
+         */
         set: function (value) {
             if (value.constructor === Number)
                 this.dom.height = value;
@@ -139,9 +167,9 @@ var Canvas = /** @class */ (function () {
     });
     return Canvas;
 }());
+// The CanvasObject constructor
 var CanvasObject = /** @class */ (function () {
-    // Create a new CanvasObject in the specified position and width.
-    /**
+    /** Create a new CanvasObject with the parameters bellow.
      *
      * @param {Number} x Sets the position x of the object in context to the Canvas origin/parent object.
      * @param {Number} y Sets the position y of the object in context to the Canvas origin/parent object.
@@ -159,10 +187,9 @@ var CanvasObject = /** @class */ (function () {
         this.width = width;
         this.height = height;
     }
-    // Add a new object
     /**
      *
-     * @param {CanvasObject} object
+     * @param {CanvasObject} object Add a new object.
      */
     CanvasObject.prototype.add = function (object) {
         this.objects.push(object);
@@ -170,7 +197,7 @@ var CanvasObject = /** @class */ (function () {
     };
     /**
      *
-     * @param {Canvas | CanvasObject} object The object to be inserted in.
+     * @param {Canvas | CanvasObject} object The object for this to be inserted in.
      */
     CanvasObject.prototype.insertIn = function (object) {
         if (!object.is_a(Canvas) && !object.is_a(CanvasObject))
@@ -178,6 +205,10 @@ var CanvasObject = /** @class */ (function () {
         this.parent = object;
     };
     Object.defineProperty(CanvasObject.prototype, "insertedIn", {
+        /**
+         *
+         * @returns {Canvas | CanvasObject} The parent object of this.
+         */
         get: function () {
             return this.parent;
         },
@@ -185,13 +216,17 @@ var CanvasObject = /** @class */ (function () {
         configurable: true
     });
     Object.defineProperty(CanvasObject.prototype, "x", {
+        /**
+         *
+         * @returns {Number} The total x position of this.
+         */
         get: function () {
             var p = this.parent.is_a(Canvas.Rect) ? this.parent.x : 0;
             return __classPrivateFieldGet(this, _CanvasObject_x, "f") + p;
         },
         /**
          *
-         * @param {Number} x Sets the x position of the object.
+         * @param {Number} x Sets the x position of the object accordingly to parent.
          */
         set: function (x) {
             __classPrivateFieldSet(this, _CanvasObject_x, x, "f");
@@ -200,13 +235,17 @@ var CanvasObject = /** @class */ (function () {
         configurable: true
     });
     Object.defineProperty(CanvasObject.prototype, "y", {
+        /**
+         *
+         * @returns {Number} The total y position of this.
+         */
         get: function () {
             var p = this.parent.is_a(Canvas.Rect) ? this.parent.y : 0;
             return __classPrivateFieldGet(this, _CanvasObject_y, "f") + p;
         },
         /**
          *
-         * @param {Number} y Sets the y position of the object.
+         * @param {Number} y Sets the y position of the object accordingly to parent.
          */
         set: function (y) {
             __classPrivateFieldSet(this, _CanvasObject_y, y, "f");
@@ -215,6 +254,10 @@ var CanvasObject = /** @class */ (function () {
         configurable: true
     });
     Object.defineProperty(CanvasObject.prototype, "_x", {
+        /**
+         *
+         * @returns {Number} The raw x position of this.
+         */
         get: function () {
             return __classPrivateFieldGet(this, _CanvasObject_x, "f");
         },
@@ -222,6 +265,10 @@ var CanvasObject = /** @class */ (function () {
         configurable: true
     });
     Object.defineProperty(CanvasObject.prototype, "_y", {
+        /**
+         *
+         * @returns {Number} The raw y position of this.
+         */
         get: function () {
             return __classPrivateFieldGet(this, _CanvasObject_y, "f");
         },
@@ -231,11 +278,10 @@ var CanvasObject = /** @class */ (function () {
     return CanvasObject;
 }());
 _CanvasObject_x = new WeakMap(), _CanvasObject_y = new WeakMap();
+// The Canvas.Rect constructor
 Canvas.Rect = /** @class */ (function (_super) {
     __extends(Rect, _super);
-    // Initialize object
-    // Create a new Rect using the parameters below
-    /**
+    /** Create a new Rect using the parameters below
      *
      * @param {Number} x Sets the position x of the object in context to the Canvas origin.
      * @param {Number} y Sets the position y of the object in context to the Canvas origin.
@@ -244,6 +290,7 @@ Canvas.Rect = /** @class */ (function (_super) {
      * @param {Object} style Add styles to Rect.
      * @param {String} style.type Defines the type of Rect (fill or stroke).
      * @param {String} style.color Defines the color of the Rect.
+     *
      */
     function Rect(x, y, width, height, style) {
         if (style === void 0) { style = { color: "#000000" }; }
@@ -262,7 +309,10 @@ Canvas.Rect = /** @class */ (function (_super) {
         _this.type = style.type;
         return _this;
     }
-    // Update the object and every child
+    /** Update the object and every child
+     *
+     * @returns false if failed.
+     */
     Rect.prototype.update = function () {
         if (!this.parent)
             return false;

@@ -1,2 +1,4 @@
-build/Canvas.ts
+build/Canvas.local.js
+build/tsconfig.json
+build/tscrun.bat
 dependencies
