@@ -225,7 +225,7 @@ class CanvasObject {
     }
     /**
      *
-     * @returns {Number} The total x position of this.
+     * @returns {Number} The object x position after orbit.
      */
     get rotOffX() {
         const o = Math.cos(CanvasObject.degToRad(this.orbit)) * (this.x - this.y);
@@ -233,7 +233,7 @@ class CanvasObject {
     }
     /**
      *
-     * @returns {Number} The total y position of this.
+     * @returns {Number} The object y position after orbit.
      */
     get rotOffY() {
         const o = Math.sin(CanvasObject.degToRad(this.orbit)) * (this.y - this.x);
@@ -343,7 +343,7 @@ Canvas.Rect = class Rect extends CanvasObject {
         ctx.translate(this.parent.x + this.parent.width / 2, this.parent.y + this.parent.height / 2);
         ctx.rotate(CanvasObject.degToRad(this.orbit));
         ctx.translate(-this.parent.x, -this.parent.y);
-        ctx[this.type + "Rect"](this.x + this.rotOffX, this.y + this.rotOffY, this.width, this.height);
+        ctx[this.type + "Rect"](this.x + (this.parent.rotOffX ? this.parent.rotOffX : 0), this.y + (this.parent.rotOffY ? this.parent.rotOffY : 0), this.width, this.height);
         ctx.restore();
         for (let x in this.objects)
             this.objects[x].update();
