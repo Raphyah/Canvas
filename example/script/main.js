@@ -61,8 +61,14 @@ const canvas = new Canvas();
 canvas.setSize(1280,720);
 document.body.appendChild(canvas.dom);
 
-const rect = new Canvas.Rect(10,10,10,10);
-canvas.add(rect);
+const rect1 = new Canvas.Rect(100,100,20,20);
+canvas.add(rect1);
+
+const rect2 = new Canvas.Rect(50,0,10,10);
+rect1.add(rect2);
+
+const rect3 = new Canvas.Rect(20,0,5,5);
+rect2.add(rect3);
 
 const walker1 = new Image().src = "./image/walker3.png";
 
@@ -84,8 +90,17 @@ document.body.appendChild( stats.dom );
 const objects_in_canvas = new Stats.Panel("Custom","#fff","#000");
 stats.addPanel(objects_in_canvas);
 
+const r2rx = new Stats.Panel("R2RX","#fff","#000");
+stats.addPanel(r2rx);
+
+const r2ry = new Stats.Panel("R2RY","#fff","#000");
+stats.addPanel(r2ry);
+
 function animate(ts){
 	objects_in_canvas.update(canvas.objects.length,100);
+	r2rx.update(rect2.rotOffX,rect2.rotOffX);
+	r2ry.update(rect2.rotOffY,rect2.rotOffY);
+
 	// walkers.push(new Canvas.Image(`./image/walker${(walkers.length % 3)+1}.png`,0,64*walkers.length-1,64,64,0,0,64,64));
 	// canvas.add(walkers[walkers.length-1])
 	for(let x of walkers){
@@ -109,6 +124,7 @@ function animate(ts){
 			x.imageX = 64 * 10;
 		}
 	}
+	rect2.orbit = ts / 100;
 }
 function update(ts){
 	stats.begin();
