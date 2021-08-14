@@ -9,7 +9,6 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _CanvasObject_x, _CanvasObject_y;
 // Get every ancestor of the current prototype.
 Object.defineProperty(Object.prototype, "ancestors", {
     /**
@@ -33,13 +32,23 @@ Object.defineProperty(Object.prototype, "is_a", {
     /**
      *
      * @param {*} object Check if this is equal to object.
+     * @returns a boolean indicating if is the same of.
+     */
+    value(object) {
+        return Object.getPrototypeOf(this).constructor === object;
+    }
+});
+// Check if the current object is any of value.
+Object.defineProperty(Object.prototype, "is_of", {
+    /**
+     *
+     * @param {*} object Check if this is equal to an object ancestor.
      * @returns a boolean indicating if is descendant of.
      */
     value(object) {
         return this.ancestors.includes(object);
     }
 });
-// The Canvas constructor
 class Canvas {
     // Initialize object
     /**
@@ -84,11 +93,10 @@ class Canvas {
      * @param {CanvasObject} object Append a new object to this one.
      */
     add(object) {
-        if (!object.is_a(CanvasObject))
+        if (!object.is_of(CanvasObject))
             return console.log("The object is not a CanvasObject.");
         this.objects.push(object);
         object.insertIn(this);
-        console.log(this.objects);
     }
     // Render every object added to canvas
     /**
@@ -96,7 +104,7 @@ class Canvas {
      */
     render() {
         for (let x in this.objects) {
-            if (this.objects[x].is_a(CanvasObject)) {
+            if (this.objects[x].is_of(CanvasObject)) {
                 this.objects[x].update();
             }
         }
@@ -115,7 +123,7 @@ class Canvas {
      * @param {Number} value Set a new width for canvas element.
      */
     set width(value) {
-        if (value.constructor === Number)
+        if (!isNaN(+value))
             this.dom.width = value;
         else
             console.warn("width() value is not a Number.");
@@ -132,12 +140,13 @@ class Canvas {
      * @param {Number} value Set a new height for canvas element.
      */
     set height(value) {
-        if (value.constructor === Number)
+        if (!isNaN(+value))
             this.dom.height = value;
         else
             console.warn("height() value is not a Number.");
     }
 }
+var _CanvasObject_x, _CanvasObject_y, _CanvasObject_width, _CanvasObject_height, _CanvasObject_orbit;
 // The CanvasObject constructor
 class CanvasObject {
     /** Create a new CanvasObject with the parameters bellow.
@@ -150,19 +159,24 @@ class CanvasObject {
     constructor(x, y, width, height) {
         _CanvasObject_x.set(this, void 0);
         _CanvasObject_y.set(this, void 0);
+        _CanvasObject_width.set(this, void 0);
+        _CanvasObject_height.set(this, void 0);
+        _CanvasObject_orbit.set(this, 0);
         this.parent = false;
         this.rendering_canvas = false;
         this.objects = [];
         __classPrivateFieldSet(this, _CanvasObject_x, x, "f");
         __classPrivateFieldSet(this, _CanvasObject_y, y, "f");
-        this.width = width;
-        this.height = height;
+        __classPrivateFieldSet(this, _CanvasObject_width, width, "f");
+        __classPrivateFieldSet(this, _CanvasObject_height, height, "f");
     }
     /**
      *
      * @param {CanvasObject} object Add a new object.
      */
     add(object) {
+        if (!object.is_of(CanvasObject))
+            return console.log("The object is not a CanvasObject.");
         this.objects.push(object);
         object.insertIn(this);
     }
@@ -171,8 +185,8 @@ class CanvasObject {
      * @param {Canvas | CanvasObject} object The object for this to be inserted in.
      */
     insertIn(object) {
-        if (!object.is_a(Canvas) && !object.is_a(CanvasObject))
-            return console.log("Not a CanvasObject.");
+        if (!object.is_a(Canvas) && !object.is_of(CanvasObject))
+            return console.log("The object is not a Canvas nor a CanvasObject.");
         this.parent = object;
     }
     /**
@@ -187,7 +201,7 @@ class CanvasObject {
      * @returns {Number} The total x position of this.
      */
     get x() {
-        const p = this.parent.is_a(Canvas.Rect) ? this.parent.x : 0;
+        const p = this.parent.is_of(CanvasObject) ? this.parent.x : 0;
         return __classPrivateFieldGet(this, _CanvasObject_x, "f") + p;
     }
     /**
@@ -195,7 +209,7 @@ class CanvasObject {
      * @returns {Number} The total y position of this.
      */
     get y() {
-        const p = this.parent.is_a(Canvas.Rect) ? this.parent.y : 0;
+        const p = this.parent.is_of(CanvasObject) ? this.parent.y : 0;
         return __classPrivateFieldGet(this, _CanvasObject_y, "f") + p;
     }
     /**
@@ -212,6 +226,30 @@ class CanvasObject {
     set y(y) {
         __classPrivateFieldSet(this, _CanvasObject_y, y, "f");
     }
+    get width() {
+        return __classPrivateFieldGet(this, _CanvasObject_width, "f");
+    }
+    get height() {
+        return __classPrivateFieldGet(this, _CanvasObject_height, "f");
+    }
+    /**
+     *
+     * @param {Number} value Sets the width position of the object.
+     */
+    set width(value) {
+        if (!value.is_a(Number) || Number.isNaN(value))
+            return false;
+        __classPrivateFieldSet(this, _CanvasObject_width, value, "f");
+    }
+    /**
+     *
+     * @param {Number} value Sets the height of the object.
+     */
+    set height(value) {
+        if (!value.is_a(Number) || Number.isNaN(value))
+            return false;
+        __classPrivateFieldSet(this, _CanvasObject_height, value, "f");
+    }
     /**
      *
      * @returns {Number} The raw x position of this.
@@ -226,10 +264,22 @@ class CanvasObject {
     get _y() {
         return __classPrivateFieldGet(this, _CanvasObject_y, "f");
     }
+    set orbit(value) {
+        __classPrivateFieldSet(this, _CanvasObject_orbit, value, "f");
+    }
+    get orbit() {
+        return __classPrivateFieldGet(this, _CanvasObject_orbit, "f");
+    }
+    static degToRad(degrees) {
+        return degrees * Math.PI / 180;
+    }
+    static radToDeg(radians) {
+        return radians * 180 / Math.PI;
+    }
 }
-_CanvasObject_x = new WeakMap(), _CanvasObject_y = new WeakMap();
+_CanvasObject_x = new WeakMap(), _CanvasObject_y = new WeakMap(), _CanvasObject_width = new WeakMap(), _CanvasObject_height = new WeakMap(), _CanvasObject_orbit = new WeakMap();
 // The Canvas.Rect constructor
-Canvas.Rect = class extends CanvasObject {
+Canvas.Rect = class Rect extends CanvasObject {
     /** Create a new Rect using the parameters below
      *
      * @param {Number} x Sets the position x of the object in context to the Canvas origin.
@@ -243,7 +293,7 @@ Canvas.Rect = class extends CanvasObject {
      */
     constructor(x, y, width, height, style = { color: "#000000" }) {
         super(x, y, width, height);
-        if (!style || !style.constructor === Object) {
+        if (!style || !style.is_a(Object)) {
             style = {};
         }
         if (!style.color)
@@ -251,7 +301,7 @@ Canvas.Rect = class extends CanvasObject {
         if (!style.type)
             style.type = "fill";
         style.type = style.type.toLowerCase();
-        if (["fill", "rect"].includes(style.type))
+        if (!["clear", "fill", "rect"].includes(style.type))
             style.type = "fill";
         this.color = style.color;
         this.type = style.type;
@@ -264,7 +314,7 @@ Canvas.Rect = class extends CanvasObject {
         if (!this.parent)
             return false;
         if (!this.rendering_canvas) {
-            if (this.is_a(Canvas) || this.is_a(CanvasObject)) {
+            if (this.is_a(Canvas) || this.is_of(CanvasObject)) {
                 let scanning = this.parent;
                 while (true) {
                     //console.log(scanning);
@@ -291,3 +341,124 @@ Canvas.Rect = class extends CanvasObject {
             this.objects[x].update();
     }
 };
+var _Image_imageX, _Image_imageY, _Image_imageWidth, _Image_imageHeight, _a;
+Canvas.Image = (_a = class Image extends CanvasObject {
+        /** Create a new Image using the parameters below.
+         *
+         * @param {String} src The source of the image or an Image object.
+         * @param {Number} x The x-position of the image in the context.
+         * @param {Number} y The y-position of the image in the context.
+         * @param {Number} width The width of the image on the context.
+         * @param {Number} height The height of the image on the context.
+         * @param {Number} iX The image source x-position to be rendered in the context. 0 if false.
+         * @param {Number} iY The image source y-position to be rendered in the context. 0 if false.
+         * @param {Number} iW The image source width to be rendered in the context. Same as Image.width if false.
+         * @param {Number} iH The image source height to be rendered in the context. Same as Image.height if false.
+         *
+         * @param iX and @param iY have no result if @param iW and @param iH are equal to the image width/height.
+         */
+        constructor(src, x, y, width, height, iX = false, iY = false, iW = false, iH = false) {
+            super(x, y, width, height);
+            _Image_imageX.set(this, void 0);
+            _Image_imageY.set(this, void 0);
+            _Image_imageWidth.set(this, void 0);
+            _Image_imageHeight.set(this, void 0);
+            this.image = src.is_a(HTMLImageElement) ? src : (function () {
+                const a = new window.Image();
+                a.src = src;
+                return a;
+            })();
+            __classPrivateFieldSet(this, _Image_imageX, iX || 0, "f");
+            __classPrivateFieldSet(this, _Image_imageY, iY || 0, "f");
+            __classPrivateFieldSet(this, _Image_imageWidth, iW || this.image.naturalWidth, "f");
+            __classPrivateFieldSet(this, _Image_imageHeight, iH || this.image.naturalHeight, "f");
+        }
+        /** Update the object and every child
+         *
+         * @returns false if failed.
+         */
+        update() {
+            if (!this.image.complete)
+                return false;
+            if (!this.parent)
+                return false;
+            if (!this.rendering_canvas) {
+                if (this.is_a(Canvas) || this.is_of(CanvasObject)) {
+                    let scanning = this.parent;
+                    while (true) {
+                        //console.log(scanning);
+                        if (scanning.is_a(Canvas)) {
+                            this.rendering_canvas = scanning;
+                            //console.log("Rendering canvas set");
+                            break;
+                        }
+                        else if (!scanning.parent) {
+                            break;
+                        }
+                        scanning = scanning.parent;
+                    }
+                }
+            }
+            if (!this.rendering_canvas)
+                return false;
+            let ctx = this.rendering_canvas.context;
+            ctx.save();
+            ctx.drawImage(this.image, __classPrivateFieldGet(this, _Image_imageX, "f"), __classPrivateFieldGet(this, _Image_imageY, "f"), __classPrivateFieldGet(this, _Image_imageWidth, "f"), __classPrivateFieldGet(this, _Image_imageHeight, "f"), this.x, this.y, this.width, this.height);
+            ctx.restore();
+            for (let x in this.objects)
+                this.objects[x].update();
+        }
+        /**
+         *
+         * @returns {Number} The rendered x position of the image source.
+         */
+        get imageX() {
+            return __classPrivateFieldGet(this, _Image_imageX, "f");
+        }
+        /**
+         *
+         * @returns {Number} The rendered y position of the image source.
+         */
+        get imageY() {
+            return __classPrivateFieldGet(this, _Image_imageY, "f");
+        }
+        set imageX(value) {
+            if (isNaN(value))
+                return false;
+            __classPrivateFieldSet(this, _Image_imageX, value, "f");
+        }
+        set imageY(value) {
+            if (!value.is_a(Number) || Number.isNaN(value))
+                return false;
+            __classPrivateFieldSet(this, _Image_imageY, value, "f");
+        }
+        /**
+         *
+         * @returns {Number} The rendered width of the image source.
+         */
+        get imageWidth() {
+            return __classPrivateFieldGet(this, _Image_imageWidth, "f");
+        }
+        /**
+         *
+         * @returns {Number} The rendered height of the image source.
+         */
+        get imageHeight() {
+            return __classPrivateFieldGet(this, _Image_imageHeight, "f");
+        }
+        set imageWidth(value) {
+            if (!value.is_a(Number) || Number.isNaN(value))
+                return false;
+            __classPrivateFieldSet(this, _Image_imageWidth, value, "f");
+        }
+        set imageHeight(value) {
+            if (!value.is_a(Number) || Number.isNaN(value))
+                return false;
+            __classPrivateFieldSet(this, _Image_imageHeight, value, "f");
+        }
+    },
+    _Image_imageX = new WeakMap(),
+    _Image_imageY = new WeakMap(),
+    _Image_imageWidth = new WeakMap(),
+    _Image_imageHeight = new WeakMap(),
+    _a);
