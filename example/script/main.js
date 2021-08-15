@@ -70,7 +70,7 @@ rect1.add(rect2);
 const rect3 = new Canvas.Rect(20,0,5,5);
 rect2.add(rect3);
 
-const walker1 = new Image().src = "./image/walker3.png";
+const walker1 = new Image().src = "./image/walker1.png";
 
 const walkers = [
 	new Canvas.Image(walker1,0,0,64,64,0,0,64,64),
@@ -87,8 +87,8 @@ canvas.render();
 const stats = new Stats();
 document.body.appendChild( stats.dom );
 
-const objects_in_canvas = new Stats.Panel("Custom","#fff","#000");
-stats.addPanel(objects_in_canvas);
+const oic = new Stats.Panel("Objects","#fff","#000");
+stats.addPanel(oic);
 
 const r2rx = new Stats.Panel("R2RX","#fff","#000");
 stats.addPanel(r2rx);
@@ -96,13 +96,20 @@ stats.addPanel(r2rx);
 const r2ry = new Stats.Panel("R2RY","#fff","#000");
 stats.addPanel(r2ry);
 
-function animate(ts){
-	objects_in_canvas.update(canvas.objects.length,100);
-	r2rx.update(rect2.rotOffX,rect2.rotOffX);
-	r2ry.update(rect2.rotOffY,rect2.rotOffY);
+stats.showPanel(0);
 
-	// walkers.push(new Canvas.Image(`./image/walker${(walkers.length % 3)+1}.png`,0,64*walkers.length-1,64,64,0,0,64,64));
-	// canvas.add(walkers[walkers.length-1])
+function animate(ts){
+	oic.update(canvas.objects.length,100);
+	r2rx.update(rect2.rotOffX,rect2.x);
+	r2ry.update(rect2.rotOffY,rect2.y);
+
+	/* walkers.push(
+		new Canvas.Image(
+			`./image/walker${(walkers.length % 3)+1}.png`,
+			0,64*walkers.length-1,64,64,0,0,64,64
+		)
+	); */
+	// canvas.add(walkers[walkers.length-1]);
 	for(let x of walkers){
 		x.imageX = 64 * ( ( x.imageX / 64 + 1) % ( x.image.naturalWidth / x.imageWidth ) );
 		if(keyEvent.keydown["w"]){
