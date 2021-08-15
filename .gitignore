@@ -1,6 +1,5 @@
 build/local
 build/tsconfig.json
 build/run.bat
-example/index.html
 example/image/excluded
 dependencies
