@@ -38,103 +38,6 @@ Object.defineProperty(Object.prototype, "is_of", {
         return this.ancestors.includes(object);
     }
 });
-class Canvas {
-    // Initialize object
-    /**
-     *
-     * @param {String} ctx Sets the context type. (default: 2d)
-     */
-    constructor(ctx = "2d") {
-        this.objects = [];
-        this.dom = document.createElement("canvas");
-        this.context = this.dom.getContext(ctx);
-    }
-    // Set canvas DOM dimensions
-    /**
-     *
-     * @param {Number} width Sets the canvas width.
-     * @param {Number} height Sets the canvas height.
-     */
-    setSize(width, height) {
-        this.width = width;
-        this.height = height;
-    }
-    // Clears the canvas object
-    /**
-     *
-     * @param {Number} x Sets the initial cleaning position x. Set to 0 if NaN. (default: 0)
-     * @param {Number} y Sets the initial cleaning position y. Set to 0 if NaN. (default: 0)
-     * @param {Number} width Sets the cleaning area witdh. Set to this.canvas.width if NaN.
-     * @param {Number} height Sets the cleaning area height. Set to this.canvas.height if NaN.
-     */
-    clear(x = false, y = false, width = false, height = false) {
-        x = x.constructor === Number ? x : 0;
-        y = y.constructor === Number ? y : 0;
-        width = width.constructor === Number ?
-            width : this.dom.width;
-        height = height.constructor === Number ?
-            height : this.dom.height;
-        this.context.clearRect(x, y, width, height);
-    }
-    // Add a new object
-    /**
-     *
-     * @param {CanvasObject} object Append a new object to this one.
-     */
-    add(object) {
-        if (!object.is_of(CanvasObject))
-            return console.log("The object is not a CanvasObject.");
-        this.objects.push(object);
-        object.insertIn(this);
-    }
-    // Render every object added to canvas
-    /**
-     * Render every object appended to this one.
-     */
-    render() {
-        for (let x in this.objects) {
-            if (this.objects[x].is_of(CanvasObject)) {
-                this.objects[x].update();
-            }
-        }
-    }
-    // Getter for canvas width
-    /**
-     *
-     * @returns Get the current width of the canvas element.
-     */
-    get width() {
-        return this.dom.width;
-    }
-    // Setter for canvas width
-    /**
-     *
-     * @param {Number} value Set a new width for canvas element.
-     */
-    set width(value) {
-        if (!isNaN(+value))
-            this.dom.width = value;
-        else
-            console.warn("width() value is not a Number.");
-    }
-    /**
-     *
-     * @returns {Number} Get the current height of the canvas element.
-     */
-    get height() {
-        return this.dom.height;
-    }
-    /**
-     *
-     * @param {Number} value Set a new height for canvas element.
-     */
-    set height(value) {
-        if (!isNaN(+value))
-            this.dom.height = value;
-        else
-            console.warn("height() value is not a Number.");
-    }
-}
 // The CanvasObject constructor
 class CanvasObject {
     #x;
@@ -158,7 +61,7 @@ class CanvasObject {
         this.#width = width;
         this.#height = height;
     }
-    fetchParent() {
+    fetchCanvas() {
         if (!this.parent)
             return false;
         if (!this.rendering_canvas) {
@@ -190,6 +93,15 @@ class CanvasObject {
             return console.log("The object is not a CanvasObject.");
         this.objects.push(object);
         object.insertIn(this);
+    }
+    /**
+     *
+     * @param {CanvasObject} obj
+     */
+    remove(obj) {
+        const index = this.objects.indexOf(obj);
+        if (index)
+            this.objects.splice(obj);
     }
     /**
      *
@@ -264,7 +176,7 @@ class CanvasObject {
      * @param {Number} value Sets the width position of the object.
      */
     set width(value) {
-        if (!value.is_a(Number) || Number.isNaN(value))
+        if (!isNaN(+value))
             return false;
         this.#width = value;
     }
@@ -273,7 +185,7 @@ class CanvasObject {
      * @param {Number} value Sets the height of the object.
      */
     set height(value) {
-        if (!value.is_a(Number) || Number.isNaN(value))
+        if (!isNaN(+value))
             return false;
         this.#height = value;
     }
@@ -302,6 +214,103 @@ class CanvasObject {
     }
     static radToDeg(radians) {
         return radians * 180 / Math.PI;
+    }
+}
+class Canvas {
+    // Initialize object
+    /**
+     *
+     * @param {String} ctx Sets the context type. (default: 2d)
+     */
+    constructor(ctx = "2d") {
+        this.objects = [];
+        this.dom = document.createElement("canvas");
+        this.context = this.dom.getContext(ctx);
+    }
+    // Set canvas DOM dimensions
+    /**
+     *
+     * @param {Number} width Sets the canvas width.
+     * @param {Number} height Sets the canvas height.
+     */
+    setSize(width, height) {
+        this.width = width;
+        this.height = height;
+    }
+    // Clears the canvas object
+    /**
+     *
+     * @param {Number} x Sets the initial cleaning position x. Set to 0 if NaN. (default: 0)
+     * @param {Number} y Sets the initial cleaning position y. Set to 0 if NaN. (default: 0)
+     * @param {Number} width Sets the cleaning area witdh. Set to this.canvas.width if NaN.
+     * @param {Number} height Sets the cleaning area height. Set to this.canvas.height if NaN.
+     */
+    clear(x = false, y = false, width = false, height = false) {
+        x = x.constructor === Number ? x : 0;
+        y = y.constructor === Number ? y : 0;
+        width = width.constructor === Number ?
+            width : this.dom.width;
+        height = height.constructor === Number ?
+            height : this.dom.height;
+        this.context.clearRect(x, y, width, height);
+    }
+    // Add a new object
+    /**
+     *
+     * @param {CanvasObject} object Append a new object to this one.
+     */
+    add(object) {
+        if (!object.is_of(CanvasObject) && !object.is_a(Canvas))
+            return console.log("The object is not a CanvasObject.");
+        this.objects.push(object);
+        object.insertIn(this);
+    }
+    // Render every object added to canvas
+    /**
+     * Render every object appended to this one.
+     */
+    render() {
+        for (let x in this.objects) {
+            if (this.objects[x].is_of(CanvasObject)) {
+                this.objects[x].update();
+            }
+        }
+    }
+    // Getter for canvas width
+    /**
+     *
+     * @returns Get the current width of the canvas element.
+     */
+    get width() {
+        return this.dom.width;
+    }
+    // Setter for canvas width
+    /**
+     *
+     * @param {Number} value Set a new width for canvas element.
+     */
+    set width(value) {
+        if (!isNaN(+value))
+            this.dom.width = value;
+        else
+            console.warn("width() value is not a Number.");
+    }
+    /**
+     *
+     * @returns {Number} Get the current height of the canvas element.
+     */
+    get height() {
+        return this.dom.height;
+    }
+    /**
+     *
+     * @param {Number} value Set a new height for canvas element.
+     */
+    set height(value) {
+        if (!isNaN(+value))
+            this.dom.height = value;
+        else
+            console.warn("height() value is not a Number.");
     }
 }
 Canvas.Rect = class Rect extends CanvasObject {
@@ -336,13 +345,17 @@ Canvas.Rect = class Rect extends CanvasObject {
      * @returns false if failed.
      */
     update() {
-        this.fetchParent();
+        this.fetchCanvas();
+        if (!this.rendering_canvas.is_a(Canvas))
+            return;
         let ctx = this.rendering_canvas.context;
         ctx.save();
         ctx[this.type + "Style"] = this.color;
-        ctx.translate(this.parent.x + this.parent.width / 2, this.parent.y + this.parent.height / 2);
+        const tx = this.parent.x + this.parent.width / 2;
+        const ty = this.parent.y + this.parent.height / 2;
+        ctx.translate(tx, ty);
         ctx.rotate(CanvasObject.degToRad(this.orbit));
-        ctx.translate(-this.parent.x, -this.parent.y);
+        ctx.translate(-tx, -ty);
         ctx[this.type + "Rect"](this.x + (this.parent.rotOffX ? this.parent.rotOffX : 0), this.y + (this.parent.rotOffY ? this.parent.rotOffY : 0), this.width, this.height);
         ctx.restore();
         for (let x in this.objects)
@@ -385,7 +398,7 @@ Canvas.Image = class Image extends CanvasObject {
      * @returns false if failed.
      */
     update() {
-        this.fetchParent();
+        this.fetchCanvas();
         let ctx = this.rendering_canvas.context;
         ctx.save();
         ctx.drawImage(this.image, this.#imageX, this.#imageY, this.#imageWidth, this.#imageHeight, this.x, this.y, this.width, this.height);
