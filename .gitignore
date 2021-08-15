@@ -1,4 +1,4 @@
 build/local
 build/tsconfig.json
-build/tscrun.bat
+build/run.bat
 dependencies
