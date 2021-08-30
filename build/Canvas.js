@@ -335,7 +335,7 @@ Canvas.Rect = class Rect extends CanvasObject {
         if (!style.type)
             style.type = "fill";
         style.type = style.type.toLowerCase();
-        if (!["clear", "fill", "rect"].includes(style.type))
+        if (!["clear", "fill", "stroke"].includes(style.type))
             style.type = "fill";
         this.color = style.color;
         this.type = style.type;
@@ -453,5 +453,83 @@ Canvas.Image = class Image extends CanvasObject {
         if (!value.is_a(Number) || Number.isNaN(value))
             return false;
         this.#imageHeight = value;
+    }
+};
+Canvas.Arc = class Arc extends CanvasObject {
+    #radius;
+    #start;
+    #end;
+    /** Create a new Rect using the parameters below
+     *
+     * @param {Number} x Sets the position x of the object in context to the Canvas origin.
+     * @param {Number} y Sets the position y of the object in context to the Canvas origin.
+     * @param {Number} width Sets the width of the rectangle.
+     * @param {Number} height Sets the height of the rectangle.
+     * @param {Object} style Add styles to Rect.
+     * @param {String} style.type Defines the type of Rect (fill or stroke).
+     * @param {String} style.color Defines the color of the Rect.
+     *
+     */
+    constructor(x, y, radius, start, end, style = { color: "#000000" }) {
+        super(x, y, radius, radius);
+        this.#radius = Math.abs(radius);
+        this.#start = start;
+        this.#end = end;
+        if (!style || !style.is_a(Object)) {
+            style = {};
+        }
+        if (!style.color)
+            style.color = "#000000";
+        if (!style.type)
+            style.type = "fill";
+        style.type = style.type.toLowerCase();
+        if (!["fill", "stroke"].includes(style.type))
+            style.type = "fill";
+        this.color = style.color;
+        this.type = style.type;
+    }
+    /** Update the object and every child
+     *
+     * @returns false if failed.
+     */
+    update() {
+        this.fetchCanvas();
+        if (!this.rendering_canvas.is_a(Canvas))
+            return;
+        let ctx = this.rendering_canvas.context;
+        ctx.save();
+        ctx[this.type + "Style"] = this.color;
+        const tx = this.parent.x + this.parent.width / 2;
+        const ty = this.parent.y + this.parent.height / 2;
+        ctx.translate(tx, ty);
+        ctx.rotate(CanvasObject.degToRad(this.orbit));
+        ctx.translate(-tx, -ty);
+        ctx.beginPath();
+        ctx.arc(this.x + (this.parent.rotOffX ? this.parent.rotOffX : 0), this.y + (this.parent.rotOffY ? this.parent.rotOffY : 0), this.radius, this.start, this.end);
+        ctx[this.type]();
+        ctx.restore();
+        for (let x in this.objects)
+            this.objects[x].update();
+    }
+    set radius(value) {
+        value = Math.abs(value);
+        this.width = value;
+        this.height = value;
+        this.#radius = value;
+    }
+    get radius() {
+        return this.#radius;
+    }
+    set start(value) {
+        this.#start = value;
+    }
+    get start() {
+        return this.#start;
+    }
+    set end(value) {
+        this.#end = value;
+    }
+    get end() {
+        return this.#end;
     }
 };

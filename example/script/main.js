@@ -61,14 +61,14 @@ const canvas = new Canvas();
 canvas.setSize(1280,720);
 document.body.appendChild(canvas.dom);
 
-const rect1 = new Canvas.Rect(100,100,20,20);
-canvas.add(rect1);
+const circle = new Canvas.Arc(100,100,10,0,2*Math.PI);
+canvas.add(circle);
 
-const rect2 = new Canvas.Rect(50,0,10,10);
+const rect1 = new Canvas.Rect(50,0,10,10);
+circle.add(rect1);
+
+const rect2 = new Canvas.Rect(20,0,5,5);
 rect1.add(rect2);
-
-const rect3 = new Canvas.Rect(20,0,5,5);
-rect2.add(rect3);
 
 const walker1 = new Image().src = "./image/walker1.png";
 
@@ -90,18 +90,18 @@ document.body.appendChild( stats.dom );
 const oic = new Stats.Panel("Objects","#fff","#000");
 stats.addPanel(oic);
 
-const r2rx = new Stats.Panel("R2RX","#fff","#000");
-stats.addPanel(r2rx);
+const r2ox = new Stats.Panel("R2OX","#fff","#000");
+stats.addPanel(r2ox);
 
-const r2ry = new Stats.Panel("R2RY","#fff","#000");
-stats.addPanel(r2ry);
+const r2oy = new Stats.Panel("R2OY","#fff","#000");
+stats.addPanel(r2oy);
 
 stats.showPanel(0);
 
 function animate(ts){
 	oic.update(canvas.objects.length,100);
-	r2rx.update(rect2.rotOffX,rect2.x);
-	r2ry.update(rect2.rotOffY,rect2.y);
+	r2ox.update(rect1.rotOffX,rect1.x);
+	r2oy.update(rect1.rotOffY,rect1.y);
 
 	/* walkers.push(
 		new Canvas.Image(
@@ -131,7 +131,8 @@ function animate(ts){
 			x.imageX = 64 * 10;
 		}
 	}
-	rect2.orbit = ts / 100;
+	circle.radius = Math.cos(ts/1000)*10;
+	rect1.orbit = ts / 100;
 }
 function update(ts){
 	stats.begin();
