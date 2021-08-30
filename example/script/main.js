@@ -61,10 +61,26 @@ const canvas = new Canvas();
 canvas.setSize(1280,720);
 document.body.appendChild(canvas.dom);
 
-const circle = new Canvas.Arc(100,100,10,0,2*Math.PI);
+const circle = new Canvas.Arc(100,100,5,0,2*Math.PI);
+// const circle = new Canvas.Rect(100,100,10,10);
 canvas.add(circle);
 
-const rect1 = new Canvas.Rect(50,0,10,10);
+/* const cc = new Canvas.Arc(
+	circle.x+5-10,
+	circle.y+5,
+	5,0,2*Math.PI
+);
+canvas.add(cc); */
+
+const op = new Canvas.Arc(
+	circle.x + circle.width / 2,
+	circle.y + circle.height / 2,
+	0.5,0,2*Math.PI
+);
+op.color = "#FF0000";
+canvas.add(op);
+
+const rect1 = new Canvas.Rect(10,0,10,10);
 circle.add(rect1);
 
 const rect2 = new Canvas.Rect(20,0,5,5);
@@ -131,8 +147,9 @@ function animate(ts){
 			x.imageX = 64 * 10;
 		}
 	}
-	circle.radius = Math.cos(ts/1000)*10;
-	rect1.orbit = ts / 100;
+	// circle.radius = Math.cos(ts/1000)*10;
+	rect1.orbit = CanvasObject.degToRad(ts / 100);
+	// rect1.orbit = 90*1;
 }
 function update(ts){
 	stats.begin();

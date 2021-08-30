@@ -314,7 +314,7 @@ class Canvas {
     }
 }
 Canvas.Rect = class Rect extends CanvasObject {
-    /** Create a new Rect using the parameters below
+    /** Create a new Rect using the parameters below.
      *
      * @param {Number} x Sets the position x of the object in context to the Canvas origin.
      * @param {Number} y Sets the position y of the object in context to the Canvas origin.
@@ -340,7 +340,7 @@ Canvas.Rect = class Rect extends CanvasObject {
         this.color = style.color;
         this.type = style.type;
     }
-    /** Update the object and every child
+    /** Update the object and every child.
      *
      * @returns false if failed.
      */
@@ -354,7 +354,7 @@ Canvas.Rect = class Rect extends CanvasObject {
         const tx = this.parent.x + this.parent.width / 2;
         const ty = this.parent.y + this.parent.height / 2;
         ctx.translate(tx, ty);
-        ctx.rotate(CanvasObject.degToRad(this.orbit));
+        ctx.rotate(this.orbit);
         ctx.translate(-tx, -ty);
         ctx[this.type + "Rect"](this.x + (this.parent.rotOffX ? this.parent.rotOffX : 0), this.y + (this.parent.rotOffY ? this.parent.rotOffY : 0), this.width, this.height);
         ctx.restore();
@@ -393,7 +393,7 @@ Canvas.Image = class Image extends CanvasObject {
         this.#imageWidth = iW || this.image.naturalWidth;
         this.#imageHeight = iH || this.image.naturalHeight;
     }
-    /** Update the object and every child
+    /** Update the object and every child.
      *
      * @returns false if failed.
      */
@@ -459,20 +459,22 @@ Canvas.Arc = class Arc extends CanvasObject {
     #radius;
     #start;
     #end;
-    /** Create a new Rect using the parameters below
+    /** Create a new Arc using the parameters below.
      *
      * @param {Number} x Sets the position x of the object in context to the Canvas origin.
      * @param {Number} y Sets the position y of the object in context to the Canvas origin.
-     * @param {Number} width Sets the width of the rectangle.
-     * @param {Number} height Sets the height of the rectangle.
+     * @param {Number} radius Sets the radius of the circle (width and height divided by 2).
+     * @param {Number} start Sets the start position of the arc in radians.
+     * @param {Number} end Sets the end position of the arc in radians.
      * @param {Object} style Add styles to Rect.
      * @param {String} style.type Defines the type of Rect (fill or stroke).
      * @param {String} style.color Defines the color of the Rect.
      *
      */
     constructor(x, y, radius, start, end, style = { color: "#000000" }) {
-        super(x, y, radius, radius);
-        this.#radius = Math.abs(radius);
+        radius = Math.abs(radius);
+        super(x, y, radius * 2, radius * 2);
+        this.#radius = radius;
         this.#start = start;
         this.#end = end;
         if (!style || !style.is_a(Object)) {
@@ -488,7 +490,7 @@ Canvas.Arc = class Arc extends CanvasObject {
         this.color = style.color;
         this.type = style.type;
     }
-    /** Update the object and every child
+    /** Update the object and every child.
      *
      * @returns false if failed.
      */
@@ -502,10 +504,10 @@ Canvas.Arc = class Arc extends CanvasObject {
         const tx = this.parent.x + this.parent.width / 2;
         const ty = this.parent.y + this.parent.height / 2;
         ctx.translate(tx, ty);
-        ctx.rotate(CanvasObject.degToRad(this.orbit));
+        ctx.rotate(this.orbit);
         ctx.translate(-tx, -ty);
         ctx.beginPath();
-        ctx.arc(this.x + (this.parent.rotOffX ? this.parent.rotOffX : 0), this.y + (this.parent.rotOffY ? this.parent.rotOffY : 0), this.radius, this.start, this.end);
+        ctx.arc(this.x + (this.parent.rotOffX ? this.parent.rotOffX : 0) + this.radius, this.y + (this.parent.rotOffY ? this.parent.rotOffY : 0) + this.radius, this.radius, this.start, this.end);
         ctx[this.type]();
         ctx.restore();
         for (let x in this.objects)
@@ -513,8 +515,8 @@ Canvas.Arc = class Arc extends CanvasObject {
     }
     set radius(value) {
         value = Math.abs(value);
-        this.width = value;
-        this.height = value;
+        this.width = value * 2;
+        this.height = value * 2;
         this.#radius = value;
     }
     get radius() {
