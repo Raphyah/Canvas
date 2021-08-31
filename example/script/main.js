@@ -81,9 +81,11 @@ op.color = "#FF0000";
 canvas.add(op);
 
 const rect1 = new Canvas.Rect(10,0,10,10);
+rect1.alpha = 0.5;
 circle.add(rect1);
 
 const rect2 = new Canvas.Rect(20,0,5,5);
+rect2.alpha = 0.25;
 rect1.add(rect2);
 
 const walker1 = new Image().src = "./image/walker1.png";
@@ -97,6 +99,8 @@ const walkers = [
 for(let x of walkers){
 	canvas.add(x);
 }
+
+canvas.context.globalAlpha = 0.75;
 
 canvas.render();
 

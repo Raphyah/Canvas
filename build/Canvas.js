@@ -325,19 +325,22 @@ Canvas.Rect = class Rect extends CanvasObject {
      * @param {String} style.color Defines the color of the Rect.
      *
      */
-    constructor(x, y, width, height, style = { color: "#000000" }) {
+    constructor(x, y, width, height, style = {}) {
         super(x, y, width, height);
         if (!style || !style.is_a(Object)) {
             style = {};
         }
         if (!style.color)
             style.color = "#000000";
+        if (!style.alpha)
+            style.alpha = false;
         if (!style.type)
             style.type = "fill";
         style.type = style.type.toLowerCase();
         if (!["clear", "fill", "stroke"].includes(style.type))
             style.type = "fill";
         this.color = style.color;
+        this.alpha = style.alpha.is_of(Number) ? style.alpha : false;
         this.type = style.type;
     }
     /** Update the object and every child.
@@ -356,6 +359,8 @@ Canvas.Rect = class Rect extends CanvasObject {
         ctx.translate(tx, ty);
         ctx.rotate(this.orbit);
         ctx.translate(-tx, -ty);
+        if (this.alpha.is_of(Number))
+            ctx.globalAlpha = this.alpha;
         ctx[this.type + "Rect"](this.x + (this.parent.rotOffX ? this.parent.rotOffX : 0), this.y + (this.parent.rotOffY ? this.parent.rotOffY : 0), this.width, this.height);
         ctx.restore();
         for (let x in this.objects)
@@ -381,7 +386,7 @@ Canvas.Image = class Image extends CanvasObject {
      *
      * @param iX and @param iY have no result if @param iW and @param iH are equal to the image width/height.
      */
-    constructor(src, x, y, width, height, iX = false, iY = false, iW = false, iH = false) {
+    constructor(src, x, y, width, height, iX = false, iY = false, iW = false, iH = false, style = {}) {
         super(x, y, width, height);
         this.image = src.is_a(HTMLImageElement) ? src : (function () {
             const a = new window.Image();
@@ -392,6 +397,9 @@ Canvas.Image = class Image extends CanvasObject {
         this.#imageY = iY || 0;
         this.#imageWidth = iW || this.image.naturalWidth;
         this.#imageHeight = iH || this.image.naturalHeight;
+        if (!style.alpha)
+            style.alpha = false;
+        this.alpha = style.alpha.is_of(Number) ? style.alpha : false;
     }
     /** Update the object and every child.
      *
@@ -401,6 +409,8 @@ Canvas.Image = class Image extends CanvasObject {
         this.fetchCanvas();
         let ctx = this.rendering_canvas.context;
         ctx.save();
+        if (this.alpha.is_of(Number))
+            ctx.globalAlpha = this.alpha;
         ctx.drawImage(this.image, this.#imageX, this.#imageY, this.#imageWidth, this.#imageHeight, this.x, this.y, this.width, this.height);
         ctx.restore();
         for (let x in this.objects)
@@ -471,7 +481,7 @@ Canvas.Arc = class Arc extends CanvasObject {
      * @param {String} style.color Defines the color of the Rect.
      *
      */
-    constructor(x, y, radius, start, end, style = { color: "#000000" }) {
+    constructor(x, y, radius, start, end, style = {}) {
         radius = Math.abs(radius);
         super(x, y, radius * 2, radius * 2);
         this.#radius = radius;
@@ -482,12 +492,15 @@ Canvas.Arc = class Arc extends CanvasObject {
         }
         if (!style.color)
             style.color = "#000000";
+        if (!style.alpha)
+            style.alpha = false;
         if (!style.type)
             style.type = "fill";
         style.type = style.type.toLowerCase();
         if (!["fill", "stroke"].includes(style.type))
             style.type = "fill";
         this.color = style.color;
+        this.alpha = style.alpha.is_of(Number) ? style.alpha : false;
         this.type = style.type;
     }
     /** Update the object and every child.
@@ -506,6 +519,8 @@ Canvas.Arc = class Arc extends CanvasObject {
         ctx.translate(tx, ty);
         ctx.rotate(this.orbit);
         ctx.translate(-tx, -ty);
+        if (this.alpha.is_of(Number))
+            ctx.globalAlpha = this.alpha;
         ctx.beginPath();
         ctx.arc(this.x + (this.parent.rotOffX ? this.parent.rotOffX : 0) + this.radius, this.y + (this.parent.rotOffY ? this.parent.rotOffY : 0) + this.radius, this.radius, this.start, this.end);
         ctx[this.type]();
@@ -513,6 +528,10 @@ Canvas.Arc = class Arc extends CanvasObject {
         for (let x in this.objects)
             this.objects[x].update();
     }
+    /**
+     *
+     * @param value {Number} Sets the radius of the arc.
+     */
     set radius(value) {
         value = Math.abs(value);
         this.width = value * 2;
