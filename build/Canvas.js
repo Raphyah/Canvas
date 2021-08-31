@@ -52,7 +52,7 @@ class CanvasObject {
      * @param {Number} width Sets the width of the rectangle.
      * @param {Number} height Sets the height of the rectangle.
      */
-    constructor(x, y, width, height) {
+    constructor(x, y, width, height, style = {}) {
         this.parent = false;
         this.rendering_canvas = false;
         this.objects = [];
@@ -60,6 +60,21 @@ class CanvasObject {
         this.#y = y;
         this.#width = width;
         this.#height = height;
+        if (!style || !style.is_a(Object)) {
+            style = {};
+        }
+        if (!style.color)
+            style.color = "#000000";
+        if (!style.alpha)
+            style.alpha = false;
+        if (!style.type)
+            style.type = "fill";
+        style.type = style.type.toLowerCase();
+        if (!["fill", "stroke"].includes(style.type))
+            style.type = "fill";
+        this.color = style.color;
+        this.alpha = style.alpha.is_of(Number) ? style.alpha : false;
+        this.type = style.type;
     }
     fetchCanvas() {
         if (!this.parent)
@@ -112,6 +127,21 @@ class CanvasObject {
             return console.log("The object is not a Canvas nor a CanvasObject.");
         this.parent = object;
     }
+    prepare() {
+        const ctx = this.rendering_canvas.context;
+        ctx[this.type + "Style"] = this.color;
+        const tx = this.parent.x + this.parent.width / 2;
+        const ty = this.parent.y + this.parent.height / 2;
+        ctx.translate(tx, ty);
+        ctx.rotate(this.orbit);
+        ctx.translate(-tx, -ty);
+        if (this.alpha.is_of(Number))
+            ctx.globalAlpha = this.alpha;
+    }
+    updateChild() {
+        for (let x in this.objects)
+            this.objects[x].update();
+    }
     /**
      *
      * @returns {Canvas | CanvasObject} The parent object of this.
@@ -140,7 +170,8 @@ class CanvasObject {
      * @returns {Number} The object x position after orbit.
      */
     get rotOffX() {
-        const o = Math.cos(CanvasObject.degToRad(this.orbit)) * (this.x - this.y);
+        const a = this.orbit === 0 ? 0 : Math.cos(CanvasObject.degToRad(this.orbit));
+        const o = a * (this.x - this.y);
         return o;
     }
     /**
@@ -165,9 +196,15 @@ class CanvasObject {
     set y(y) {
         this.#y = y;
     }
+    /**
+     * @returns {Number} Gets the width of the object.
+     */
     get width() {
         return this.#width;
     }
+    /**
+     * @returns {Number} Gets the height of the object.
+     */
     get height() {
         return this.#height;
     }
@@ -177,7 +214,7 @@ class CanvasObject {
      */
     set width(value) {
         if (isNaN(+value))
-            return false;
+            return console.warn("CanvasObject.width() value is not a Number.");
         this.#width = value;
     }
     /**
@@ -186,7 +223,7 @@ class CanvasObject {
      */
     set height(value) {
         if (isNaN(+value))
-            return false;
+            return console.warn("CanvasObject.height() value is not a Number.");
         this.#height = value;
     }
     /**
@@ -203,15 +240,31 @@ class CanvasObject {
     get _y() {
         return this.#y;
     }
+    /**
+     * @param value {Number} Sets the orbit value for the object in radians.
+     */
     set orbit(value) {
         this.#orbit = value;
     }
+    /**
+     * @returns {Number} Gets the orbit value in radians.
+     */
     get orbit() {
         return this.#orbit;
     }
+    /**
+     *
+     * @param {Number} degrees The value in degrees.
+     * @returns {Number} Converted value in radians.
+     */
     static degToRad(degrees) {
         return degrees * Math.PI / 180;
     }
+    /**
+     *
+     * @param {Number} radians The value in radians.
+     * @returns {Number} Converted value in degrees.
+     */
     static radToDeg(radians) {
         return radians * 180 / Math.PI;
     }
@@ -290,10 +343,9 @@ class Canvas {
      * @param {Number} value Set a new width for canvas element.
      */
     set width(value) {
-        if (!isNaN(+value))
-            this.dom.width = value;
-        else
-            console.warn("width() value is not a Number.");
+        if (isNaN(+value))
+            return console.warn("width() value is not a Number.");
+        this.dom.width = value;
     }
     /**
      *
@@ -307,10 +359,9 @@ class Canvas {
      * @param {Number} value Set a new height for canvas element.
      */
     set height(value) {
-        if (!isNaN(+value))
-            this.dom.height = value;
-        else
-            console.warn("height() value is not a Number.");
+        if (isNaN(+value))
+            return console.warn("height() value is not a Number.");
+        this.dom.height = value;
     }
 }
 Canvas.Rect = class Rect extends CanvasObject {
@@ -326,22 +377,7 @@ Canvas.Rect = class Rect extends CanvasObject {
      *
      */
     constructor(x, y, width, height, style = {}) {
-        super(x, y, width, height);
-        if (!style || !style.is_a(Object)) {
-            style = {};
-        }
-        if (!style.color)
-            style.color = "#000000";
-        if (!style.alpha)
-            style.alpha = false;
-        if (!style.type)
-            style.type = "fill";
-        style.type = style.type.toLowerCase();
-        if (!["clear", "fill", "stroke"].includes(style.type))
-            style.type = "fill";
-        this.color = style.color;
-        this.alpha = style.alpha.is_of(Number) ? style.alpha : false;
-        this.type = style.type;
+        super(x, y, width, height, style);
     }
     /** Update the object and every child.
      *
@@ -353,18 +389,10 @@ Canvas.Rect = class Rect extends CanvasObject {
             return;
         let ctx = this.rendering_canvas.context;
         ctx.save();
-        ctx[this.type + "Style"] = this.color;
-        const tx = this.parent.x + this.parent.width / 2;
-        const ty = this.parent.y + this.parent.height / 2;
-        ctx.translate(tx, ty);
-        ctx.rotate(this.orbit);
-        ctx.translate(-tx, -ty);
-        if (this.alpha.is_of(Number))
-            ctx.globalAlpha = this.alpha;
+        this.prepare();
         ctx[this.type + "Rect"](this.x + (this.parent.rotOffX ? this.parent.rotOffX : 0), this.y + (this.parent.rotOffY ? this.parent.rotOffY : 0), this.width, this.height);
         ctx.restore();
-        for (let x in this.objects)
-            this.objects[x].update();
+        this.updateChild();
     }
 };
 Canvas.Image = class Image extends CanvasObject {
@@ -387,7 +415,7 @@ Canvas.Image = class Image extends CanvasObject {
      * @param iX and @param iY have no result if @param iW and @param iH are equal to the image width/height.
      */
     constructor(src, x, y, width, height, iX = false, iY = false, iW = false, iH = false, style = {}) {
-        super(x, y, width, height);
+        super(x, y, width, height, style);
         this.image = src.is_a(HTMLImageElement) ? src : (function () {
             const a = new window.Image();
             a.src = src;
@@ -397,9 +425,6 @@ Canvas.Image = class Image extends CanvasObject {
         this.#imageY = iY || 0;
         this.#imageWidth = iW || this.image.naturalWidth;
         this.#imageHeight = iH || this.image.naturalHeight;
-        if (!style.alpha)
-            style.alpha = false;
-        this.alpha = style.alpha.is_of(Number) ? style.alpha : false;
     }
     /** Update the object and every child.
      *
@@ -409,12 +434,10 @@ Canvas.Image = class Image extends CanvasObject {
         this.fetchCanvas();
         let ctx = this.rendering_canvas.context;
         ctx.save();
-        if (this.alpha.is_of(Number))
-            ctx.globalAlpha = this.alpha;
+        this.prepare();
         ctx.drawImage(this.image, this.#imageX, this.#imageY, this.#imageWidth, this.#imageHeight, this.x, this.y, this.width, this.height);
         ctx.restore();
-        for (let x in this.objects)
-            this.objects[x].update();
+        this.updateChild();
     }
     /**
      *
@@ -430,13 +453,21 @@ Canvas.Image = class Image extends CanvasObject {
     get imageY() {
         return this.#imageY;
     }
+    /**
+     *
+     * @param value {Number} Sets the x position of the image source to render.
+     */
     set imageX(value) {
-        if (isNaN(value))
+        if (isNaN(+value))
             return false;
         this.#imageX = value;
     }
+    /**
+     *
+     * @param value {Number} Sets the y position of the image source to render.
+     */
     set imageY(value) {
-        if (!value.is_a(Number) || Number.isNaN(value))
+        if (isNaN(+value))
             return false;
         this.#imageY = value;
     }
@@ -454,13 +485,21 @@ Canvas.Image = class Image extends CanvasObject {
     get imageHeight() {
         return this.#imageHeight;
     }
+    /**
+     *
+     * @param value {Number} Sets the y width of the image source to render.
+     */
     set imageWidth(value) {
-        if (!value.is_a(Number) || Number.isNaN(value))
+        if (isNaN(+value))
             return false;
         this.#imageWidth = value;
     }
+    /**
+     *
+     * @param value {Number} Sets the y height of the image source to render.
+     */
     set imageHeight(value) {
-        if (!value.is_a(Number) || Number.isNaN(value))
+        if (isNaN(+value))
             return false;
         this.#imageHeight = value;
     }
@@ -483,25 +522,10 @@ Canvas.Arc = class Arc extends CanvasObject {
      */
     constructor(x, y, radius, start, end, style = {}) {
         radius = Math.abs(radius);
-        super(x, y, radius * 2, radius * 2);
+        super(x, y, radius * 2, radius * 2, style);
         this.#radius = radius;
         this.#start = start;
         this.#end = end;
-        if (!style || !style.is_a(Object)) {
-            style = {};
-        }
-        if (!style.color)
-            style.color = "#000000";
-        if (!style.alpha)
-            style.alpha = false;
-        if (!style.type)
-            style.type = "fill";
-        style.type = style.type.toLowerCase();
-        if (!["fill", "stroke"].includes(style.type))
-            style.type = "fill";
-        this.color = style.color;
-        this.alpha = style.alpha.is_of(Number) ? style.alpha : false;
-        this.type = style.type;
     }
     /** Update the object and every child.
      *
@@ -513,20 +537,12 @@ Canvas.Arc = class Arc extends CanvasObject {
             return;
         let ctx = this.rendering_canvas.context;
         ctx.save();
-        ctx[this.type + "Style"] = this.color;
-        const tx = this.parent.x + this.parent.width / 2;
-        const ty = this.parent.y + this.parent.height / 2;
-        ctx.translate(tx, ty);
-        ctx.rotate(this.orbit);
-        ctx.translate(-tx, -ty);
-        if (this.alpha.is_of(Number))
-            ctx.globalAlpha = this.alpha;
+        this.prepare();
         ctx.beginPath();
         ctx.arc(this.x + (this.parent.rotOffX ? this.parent.rotOffX : 0) + this.radius, this.y + (this.parent.rotOffY ? this.parent.rotOffY : 0) + this.radius, this.radius, this.start, this.end);
         ctx[this.type]();
         ctx.restore();
-        for (let x in this.objects)
-            this.objects[x].update();
+        this.updateChild();
     }
     /**
      *
@@ -538,18 +554,38 @@ Canvas.Arc = class Arc extends CanvasObject {
         this.height = value * 2;
         this.#radius = value;
     }
+    /**
+     *
+     * @returns {Number} Gets the radius of the arc.
+     */
     get radius() {
         return this.#radius;
     }
+    /**
+     *
+     * @param value {Number} Sets the start of the arc in radians.
+     */
     set start(value) {
         this.#start = value;
     }
+    /**
+     *
+     * @returns {Number} Returns the value of the arc start in radians.
+     */
     get start() {
         return this.#start;
     }
+    /**
+     *
+     * @param value {Number} Sets the end of the arc in radians.
+     */
     set end(value) {
         this.#end = value;
     }
+    /**
+     *
+     * @returns {Number} Returns the value of the arc end in radians.
+     */
     get end() {
         return this.#end;
     }
