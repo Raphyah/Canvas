@@ -176,7 +176,7 @@ class CanvasObject {
      * @param {Number} value Sets the width position of the object.
      */
     set width(value) {
-        if (!isNaN(+value))
+        if (isNaN(+value))
             return false;
         this.#width = value;
     }
@@ -185,7 +185,7 @@ class CanvasObject {
      * @param {Number} value Sets the height of the object.
      */
     set height(value) {
-        if (!isNaN(+value))
+        if (isNaN(+value))
             return false;
         this.#height = value;
     }
